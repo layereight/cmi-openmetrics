@@ -2,6 +2,12 @@
 
 import sys
 from csv import reader, DictReader, Sniffer
+import cchardet as chardet
+import locale
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
+import time
+
 
 if len(sys.argv) != 2:
     print('Arguments not matching! Usage:')
@@ -152,52 +158,94 @@ common_labels = {
 }
 
 
-counter = 0
+def determine_file_encoding(filename):
+    file = open(filename, "rb")
+
+    encoded_bytes = file.read(8192)
+
+    detection = chardet.detect(encoded_bytes)
+    print(detection)
+    encoding = detection["encoding"]
+    # confidence = detection["confidence"]
+    # text = blob.decode(encoding)
+
+    file.close()
+
+    return encoding
+
+
+encoding = determine_file_encoding(csv_file)
+locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
 
 # open file in read mode
-with open(csv_file, 'r') as read_obj:
+with open(csv_file, 'r', encoding=encoding) as read_obj:
     dialect = Sniffer().sniff(read_obj.read(8192))
-    read_obj.seek(0)
 
-
-
-    heading = next(read_obj)
+    reader_obj = reader(read_obj, dialect)
 
     # Create reader object by passing the file
     # object to reader method
-    reader_obj = reader(read_obj, dialect)
 
-    # Iterate over each row in the csv file
-    # using reader object
-    for row in reader_obj:
-        print(row)
+    for mapping_key in metric_mapping_config.keys():
+        # start in file beginning
+        read_obj.seek(0)
+        heading = next(read_obj)
 
-        for key in metric_mapping_config.keys():
-            index = int(key)
+        index = int(mapping_key)
 
-            mapping_config = metric_mapping_config[key]
-            labelnames = list(common_labels.keys())
-            labels = common_labels
+        mapping_config = metric_mapping_config[mapping_key]
+        labelnames = list(common_labels.keys())
+        labels = common_labels
 
-            if 'labels' in mapping_config:
-                labelnames = labelnames + list(mapping_config['labels'].keys())
-                labels = labels | mapping_config['labels']
+        if 'labels' in mapping_config:
+            labelnames = labelnames + list(mapping_config['labels'].keys())
+            labels = labels | mapping_config['labels']
 
-            # print(labelnames)
-            # print(labels)
+        # print(labelnames)
+        # print(labels)
 
-            label_strings = []
-            for key, value in labels.items():
-                label_strings.append(key + '="' + value + '"')
+        label_strings = []
+        for key2, value in labels.items():
+            label_strings.append(key2 + '="' + value + '"')
 
-            complete_label_string = ','.join(label_strings).join(['{', '}'])
+        complete_label_string = ','.join(label_strings).join(['{', '}'])
+        metric_name = mapping_config['metric']
 
-            metric_name = mapping_config['metric']
-            print(metric_name + complete_label_string + ' ' + row[index])
+        # Iterate over each row in the csv file
+        # using reader object
+        counter = 0
 
-        counter += 1
-        if counter == 10:
-            break
+        print('# Help ' + metric_name + ' test')
+        print('# Type ' + metric_name + ' gauge')
+        for row in reader_obj:
+            counter += 1
+            if counter == 10:
+                break
+
+            # print(row)
+            raw_value = row[index]
+            date = row[0]
+            time = row[1]
+            #
+            # dt = datetime.fromisoformat(date + ' ' + time)
+            # dt_utc = dt.astimezone(timezone.utc)
+            # print(dt)
+            # print(dt_utc)
+            # print(dt.strftime("%Y-%m-%d %H:%M:%S %Z %z"))
+            # print(dt_utc.strftime("%Y-%m-%d %H:%M:%S %Z %z"))
+            # print(datetime.now(timezone.utc).astimezone().tzname())
+
+            # filter empty values
+            if len(raw_value) == 0:
+                continue
+
+            value = locale.atof(raw_value)
+
+            # filter wrong input
+            if value == 9999.9:
+                continue
+
+            print(metric_name + complete_label_string + ' ' + str(value) + ' ' + date + ' ' + time)
 
     # # pass the file object to DictReader() to get the DictReader object
     # csv_dict_reader = DictReader(read_obj, dialect=dialect)
