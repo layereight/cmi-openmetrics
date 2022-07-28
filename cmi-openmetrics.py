@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
-from csv import reader, DictReader, Sniffer
+from csv import reader, Sniffer
 import cchardet as chardet
 import locale
-from datetime import datetime, timezone
+from datetime import datetime
 from zoneinfo import ZoneInfo
-import time
-
 
 if len(sys.argv) != 2:
     print('Arguments not matching! Usage:')
@@ -164,14 +162,13 @@ def determine_file_encoding(filename):
     encoded_bytes = file.read(8192)
 
     detection = chardet.detect(encoded_bytes)
-    print(detection)
-    encoding = detection["encoding"]
+    # print(detection)
+    detected_encoding = detection["encoding"]
     # confidence = detection["confidence"]
-    # text = blob.decode(encoding)
 
     file.close()
 
-    return encoding
+    return detected_encoding
 
 
 encoding = determine_file_encoding(csv_file)
@@ -226,14 +223,9 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
             raw_value = row[index]
             date = row[0]
             time = row[1]
-            #
-            # dt = datetime.fromisoformat(date + ' ' + time)
-            # dt_utc = dt.astimezone(timezone.utc)
-            # print(dt)
-            # print(dt_utc)
-            # print(dt.strftime("%Y-%m-%d %H:%M:%S %Z %z"))
-            # print(dt_utc.strftime("%Y-%m-%d %H:%M:%S %Z %z"))
-            # print(datetime.now(timezone.utc).astimezone().tzname())
+
+            dt = datetime.fromisoformat(date + ' ' + time).replace(tzinfo=ZoneInfo("Europe/Berlin"))
+            ts = str(int(dt.timestamp()))
 
             # filter empty values
             if len(raw_value) == 0:
@@ -245,19 +237,6 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
             if value == 9999.9:
                 continue
 
-            print(metric_name + complete_label_string + ' ' + str(value) + ' ' + date + ' ' + time)
+            print(metric_name + complete_label_string + ' ' + str(value) + ' ' + ts)
 
-    # # pass the file object to DictReader() to get the DictReader object
-    # csv_dict_reader = DictReader(read_obj, dialect=dialect)
-    # # get column names from a csv file
-    # column_names = csv_dict_reader.fieldnames
-    # # print(column_names)
-    #
-    # for i in csv_dict_reader:
-    #     #print the values
-    #     print(i)
-    #     counter += 1
-    #     if counter == 10:
-    #         break
-
-    print('done')
+print('done')
