@@ -186,7 +186,7 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
     for mapping_key in metric_mapping_config.keys():
         # start in file beginning
         read_obj.seek(0)
-        heading = next(read_obj)
+        heading = next(reader_obj)
 
         index = int(mapping_key)
 
@@ -212,11 +212,11 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
         # using reader object
         counter = 0
 
-        print('# Help ' + metric_name + ' test')
+        print('# Help ' + metric_name + ' ' + heading[index])
         print('# Type ' + metric_name + ' gauge')
         for row in reader_obj:
             counter += 1
-            if counter == 10:
+            if counter == 3:
                 break
 
             # print(row)
@@ -239,4 +239,6 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
 
             print(metric_name + complete_label_string + ' ' + str(value) + ' ' + ts)
 
-print('done')
+        break
+
+# print('done')
