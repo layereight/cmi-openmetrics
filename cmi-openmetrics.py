@@ -210,12 +210,11 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
         read_obj.seek(0)
         heading = next(reader_obj)
 
-        index = int(mapping_key)
-
         mapping_config = metric_mapping_config[mapping_key]
 
-        complete_label_string = openmetrics_labels(mapping_config, mapping_key)
         metric_name = mapping_config['metric']
+        complete_label_string = openmetrics_labels(mapping_config, mapping_key)
+        index = int(mapping_key)
 
         # Iterate over each row in the csv file
         # using reader object
