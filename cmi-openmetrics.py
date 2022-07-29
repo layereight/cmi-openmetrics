@@ -14,7 +14,7 @@ if len(sys.argv) != 2:
 
 csv_file = sys.argv[1]
 
-metric_prefix = 'test_3_cmi_'
+metric_prefix = 'test_4_cmi_'
 metric_mapping_config = {
     "2": {
         "metric": "collector_celsius"
@@ -213,8 +213,8 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
         # using reader object
         counter = 0
 
-        print('# Help ' + metric_name + ' ' + heading[index])
-        print('# Type ' + metric_name + ' gauge')
+        # print('# Help ' + metric_name + ' ' + heading[index])
+        # print('# Type ' + metric_name + ' gauge')
         for row in reader_obj:
             counter += 1
             # if counter == 10 * 6:
@@ -243,6 +243,4 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
 
             print(metric_prefix + metric_name + complete_label_string + ' ' + str(value) + ' ' + ts) # + ' ' + date + ' ' + time)
 
-        break
-
-# print('done')
+print('# EOF')
