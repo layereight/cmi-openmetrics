@@ -218,8 +218,8 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
     # using reader object
     for row in reader_obj:
         counter += 1
-        if counter == 10 * 6:
-            break
+        # if counter == 10 * 6:
+        #     break
 
         if (4 + counter) % 6 != 0:
             continue
@@ -250,6 +250,6 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
             if value == 9999.9:
                 continue
 
-            print(metric_prefix + metric_name + complete_label_string + ' ' + str(value) + ' ' + ts)
+            print(f'{metric_prefix}{metric_name}{complete_label_string} {value} {ts}')
 
 print('# EOF')
