@@ -193,6 +193,11 @@ def openmetrics_labels(mapping_config, label_key):
     return label_string
 
 
+def openmetrics_timestamp(iso_datetime_string):
+    dt = datetime.fromisoformat(iso_datetime_string).replace(tzinfo=ZoneInfo("Europe/Berlin"))
+    return str(int(dt.timestamp()))
+
+
 encoding = determine_file_encoding(csv_file)
 locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
 
@@ -200,43 +205,40 @@ locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
 with open(csv_file, 'r', encoding=encoding) as read_obj:
     dialect = Sniffer().sniff(read_obj.read(8192))
 
-    reader_obj = reader(read_obj, dialect)
-
     # Create reader object by passing the file
     # object to reader method
+    reader_obj = reader(read_obj, dialect)
 
-    for mapping_key in metric_mapping_config.keys():
-        # start in file beginning
-        read_obj.seek(0)
-        heading = next(reader_obj)
+    # start in file beginning
+    heading = next(reader_obj)
 
-        mapping_config = metric_mapping_config[mapping_key]
+    counter = 0
 
-        metric_name = mapping_config['metric']
-        complete_label_string = openmetrics_labels(mapping_config, mapping_key)
-        index = int(mapping_key)
+    # Iterate over each row in the csv file
+    # using reader object
+    for row in reader_obj:
+        counter += 1
+        if counter == 10 * 6:
+            break
 
-        # Iterate over each row in the csv file
-        # using reader object
-        counter = 0
+        if (4 + counter) % 6 != 0:
+            continue
 
-        # print('# Help ' + metric_name + ' ' + heading[index])
-        # print('# Type ' + metric_name + ' gauge')
-        for row in reader_obj:
-            counter += 1
-            if counter == 10 * 6:
-                break
+        # print(row)
 
-            if (4 + counter) % 6 != 0:
-                continue
+        ts = openmetrics_timestamp(row[0] + ' ' + row[1])  # row[0]: data, row[1]: time
 
-            # print(row)
+        for mapping_key in metric_mapping_config.keys():
+            mapping_config = metric_mapping_config[mapping_key]
+
+            metric_name = mapping_config['metric']
+            complete_label_string = openmetrics_labels(mapping_config, mapping_key)
+            index = int(mapping_key)
+
+            # print('# Help ' + metric_name + ' ' + heading[index])
+            # print('# Type ' + metric_name + ' gauge')
+
             raw_value = row[index]
-            date = row[0]
-            time = row[1]
-
-            dt = datetime.fromisoformat(date + ' ' + time).replace(tzinfo=ZoneInfo("Europe/Berlin"))
-            ts = str(int(dt.timestamp()))
 
             # filter empty values
             if len(raw_value) == 0:
@@ -248,6 +250,6 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
             if value == 9999.9:
                 continue
 
-            print(metric_prefix + metric_name + complete_label_string + ' ' + str(value) + ' ' + ts) # + ' ' + date + ' ' + time)
+            print(metric_prefix + metric_name + complete_label_string + ' ' + str(value) + ' ' + ts)
 
 print('# EOF')
