@@ -151,11 +151,6 @@ metric_mapping_config = {
     }
 }
 
-common_labels = {
-    'instance': 'cmi',
-    'cmi_id': 'some cmi id'
-}
-
 
 def determine_file_encoding(filename):
     file = open(filename, "rb")
@@ -170,6 +165,32 @@ def determine_file_encoding(filename):
     file.close()
 
     return detected_encoding
+
+
+common_labels = {
+    'instance': 'cmi',
+    'cmi_id': 'some cmi id'
+}
+existing_openmetrics_labels = {}
+
+
+def openmetrics_labels(mapping_config, label_key):
+    if label_key in existing_openmetrics_labels:
+        return existing_openmetrics_labels[label_key]
+
+    labels = common_labels
+
+    if 'labels' in mapping_config:
+        labels = labels | mapping_config['labels']
+
+    label_strings = []
+    for label_name, label_value in labels.items():
+        label_strings.append(label_name + '="' + label_value + '"')
+
+    label_string = ','.join(label_strings).join(['{', '}'])
+    existing_openmetrics_labels[label_key] = label_string
+
+    return label_string
 
 
 encoding = determine_file_encoding(csv_file)
@@ -192,21 +213,8 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
         index = int(mapping_key)
 
         mapping_config = metric_mapping_config[mapping_key]
-        labelnames = list(common_labels.keys())
-        labels = common_labels
 
-        if 'labels' in mapping_config:
-            labelnames = labelnames + list(mapping_config['labels'].keys())
-            labels = labels | mapping_config['labels']
-
-        # print(labelnames)
-        # print(labels)
-
-        label_strings = []
-        for key2, value in labels.items():
-            label_strings.append(key2 + '="' + value + '"')
-
-        complete_label_string = ','.join(label_strings).join(['{', '}'])
+        complete_label_string = openmetrics_labels(mapping_config, mapping_key)
         metric_name = mapping_config['metric']
 
         # Iterate over each row in the csv file
@@ -217,8 +225,8 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
         # print('# Type ' + metric_name + ' gauge')
         for row in reader_obj:
             counter += 1
-            # if counter == 10 * 6:
-            #     break
+            if counter == 10 * 6:
+                break
 
             if (4 + counter) % 6 != 0:
                 continue
