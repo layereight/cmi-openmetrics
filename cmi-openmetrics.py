@@ -205,6 +205,8 @@ locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
 with open(csv_file, 'r', encoding=encoding) as read_obj:
     dialect = Sniffer().sniff(read_obj.read(8192))
 
+    read_obj.seek(0)
+
     # Create reader object by passing the file
     # object to reader method
     reader_obj = reader(read_obj, dialect)
@@ -221,7 +223,7 @@ with open(csv_file, 'r', encoding=encoding) as read_obj:
         # if counter == 10 * 6:
         #     break
 
-        if (4 + counter) % 6 != 0:
+        if counter % 6 != 2:
             continue
 
         # print(row)
