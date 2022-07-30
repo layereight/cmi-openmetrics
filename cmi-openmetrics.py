@@ -14,7 +14,7 @@ if len(sys.argv) != 2:
 
 csv_file = sys.argv[1]
 
-metric_prefix = 'test_5_cmi_'
+metric_prefix = 'test_6_cmi_'
 metric_mapping_config = {
     "2": {
         "metric": "collector_celsius"
