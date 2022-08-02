@@ -7,14 +7,16 @@ import locale
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-if len(sys.argv) != 2:
+if len(sys.argv) != 4:
     print('Arguments not matching! Usage:')
-    print(sys.argv[0] + ' <csv_input_file>')
+    print(sys.argv[0] + ' <csv_input_file> <cmi_id> <job_name>')
     sys.exit(1)
 
 csv_file = sys.argv[1]
+cmi_id = sys.argv[2]
+job_name = sys.argv[3]
 
-metric_prefix = 'test_6_cmi_'
+metric_prefix = 'cmi_'
 metric_mapping_config = {
     "2": {
         "metric": "collector_celsius"
@@ -169,19 +171,20 @@ def determine_file_encoding(filename):
 
 common_labels = {
     'instance': 'cmi',
-    'cmi_id': 'some cmi id'
+    'cmi_id': cmi_id,
+    'job': job_name
 }
 existing_openmetrics_labels = {}
 
 
-def openmetrics_labels(mapping_config, label_key):
+def openmetrics_labels(config, label_key):
     if label_key in existing_openmetrics_labels:
         return existing_openmetrics_labels[label_key]
 
     labels = common_labels
 
-    if 'labels' in mapping_config:
-        labels = labels | mapping_config['labels']
+    if 'labels' in config:
+        labels = labels | config['labels']
 
     label_strings = []
     for label_name, label_value in labels.items():
